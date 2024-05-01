@@ -48,7 +48,7 @@ spec:
         - name: IGNITE_QUIET
           value: "false"
         - name: IGNITE_WORK_DIR
-          value: "/data/ignite"
+          value: "/data/ignite/work"
         - name: JVM_OPTS
           value: "-Djava.net.preferIPv4Stack=true"
         ports:
@@ -60,9 +60,9 @@ spec:
         - containerPort: 8080 # REST port number.
         - containerPort: 10900 # Thin clients port number.
         volumeMounts:
-        - mountPath: "/data/ignite"
+        - mountPath: "/data/ignite/work"
           name: ignite-storage
-        - mountPath: "/data/shared"
+        - mountPath: "/data/ignite/shared"
           name: shared
         - mountPath: "/config"
           name: ignite-config
