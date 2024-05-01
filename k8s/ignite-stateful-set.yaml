@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ignite
+  namespace: ignite
+spec:
+  selector:
+    matchLabels:
+      app: ignite
+  serviceName: ignite
+  podManagementPolicy: Parallel
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: ignite
+    spec:
+      serviceAccountName: ignite
+
+      initContainers:
+      - name: ignite-zone-awareness
+        image: google/cloud-sdk:287.0.0
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command:
+        - "sh"
+        - "-c"
+        - "kubectl get no --no-headers -Lfailure-domain.beta.kubernetes.io/zone ${NODE_NAME} | awk '{print $NF}' > /data/shared/zone"
+        volumeMounts:
+        - mountPath: "/data/shared"
+          name: shared
+
+      containers:
+      - name: ignite
+        image: apacheignite/ignite:2.14.0
+        command:
+        - "sh"
+        - "-c"
+        - "export AVAILABILITY_ZONE=$(cat /data/shared/zone); exec $IGNITE_HOME/run.sh"
+        env:
+        - name: OPTION_LIBS
+          value: ignite-kubernetes,ignite-rest-http
+        - name: CONFIG_URI
+          value: file:///config/ignite-config.xml
+        - name: IGNITE_QUIET
+          value: "false"
+        - name: IGNITE_WORK_DIR
+          value: "/data/ignite"
+        - name: JVM_OPTS
+          value: "-Djava.net.preferIPv4Stack=true"
+        ports:
+        - containerPort: 11211 # JDBC port number.
+        - containerPort: 47100 # communication SPI port number.
+        - containerPort: 47500 # discovery SPI port number.
+        - containerPort: 49112 # JMX port number.
+        - containerPort: 10800 # SQL port number.
+        - containerPort: 8080 # REST port number.
+        - containerPort: 10900 # Thin clients port number.
+        volumeMounts:
+        - mountPath: "/data/ignite"
+          name: ignite-storage
+        - mountPath: "/data/shared"
+          name: shared
+        - mountPath: "/config"
+          name: ignite-config
+
+      volumes:
+      - name: shared
+        emptyDir: {}
+      - name: ignite-config
+        configMap:
+          name: ignite-config
+
+  volumeClaimTemplates:
+  - metadata:
+      name: ignite-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "ignite-persistence-storage-class"
+      resources:
+        requests:
+          storage: "1000Gi"
