@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+
+
+   <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
@@ -27,18 +29,6 @@
   http://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <bean class="org.apache.ignite.configuration.IgniteConfiguration">
-
-    <!-- Enabling Apache Ignite Persistent Store. -->
-    <property name="dataStorageConfiguration">
-      <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
-        <property name="defaultDataRegionConfiguration">
-          <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
-            <property name="persistenceEnabled" value="true"/>
-          </bean>
-        </property>
-      </bean>
-    </property>
-
     <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
     <property name="discoverySpi">
       <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
@@ -52,53 +42,35 @@
       </bean>
     </property>
 
-    <property name="cacheConfiguration">
-      <list>
-        <bean id="zone-aware-cache-template" abstract="true" class="org.apache.ignite.configuration.CacheConfiguration">
-          <!-- when you create a template via XML configuration, you must add an asterisk to the name of the template -->
-          <property name="name" value="myReplicationCache"/>
-          <property name="cacheMode" value="REPLICATED"/>
-          <property name="atomicityMode" value="ATOMIC"/>
-          <property name="backups" value="3"/>
-          <property name="readFromBackup" value="true"/>
-          <property name="partitionLossPolicy" value="READ_WRITE_SAFE"/>
-          <property name="copyOnRead" value="true"/>
-          <property name="eagerTtl" value="true"/>
-          <property name="statisticsEnabled" value="true"/>
-          <property name="affinity">
-            <bean class="org.apache.ignite.cache.affinity.rendezvous.RendezvousAffinityFunction">
-              <property name="excludeNeighbors" value="false"/>  <!-- This is CRUCIAL to make zone-awareness to work! -->
-              <property name="affinityBackupFilter">
-                <bean class="org.apache.ignite.cache.affinity.rendezvous.ClusterNodeAttributeAffinityBackupFilter">
-                  <constructor-arg>
-                    <!-- Backups must go to different AZs -->
-                    <array value-type="java.lang.String">
-                      <value>AVAILABILITY_ZONE</value>
-                    </array>
-                  </constructor-arg>
+    <!-- Configure data storage -->
+    <property name="dataStorageConfiguration">
+        <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+            <!-- Configure default data region -->
+            <property name="defaultDataRegionConfiguration">
+                <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                    <property name="persistenceEnabled" value="true"/>
                 </bean>
-              </property>
-            </bean>
-          </property>
+            </property>
         </bean>
-      </list>
     </property>
 
+    <!-- Configure work directory -->
+    <property name="workDirectory" value="/data/ignite/work"/>
 
-     <!-- Configure caches -->
-        <property name="cacheConfiguration">
-            <list>
-                <!-- Example of replicated cache configuration -->
-                <bean class="org.apache.ignite.configuration.CacheConfiguration">
-                    <!-- Cache name -->
-                    <property name="name" value="myReplicatedCache"/>
-                    <!-- Cache mode: REPLICATED -->
-                    <property name="cacheMode" value="REPLICATED"/>
-                    <!-- Optional: number of backups -->
-                    <property name="backups" value="3"/>
-                </bean>
-            </list>
-        </property>
+    <!-- Configure caches -->
+    <property name="cacheConfiguration">
+        <list>
+            <!-- Example of replicated cache configuration -->
+            <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                <!-- Cache name -->
+                <property name="name" value="myReplicatedCache"/>
+                <!-- Cache mode: REPLICATED -->
+                <property name="cacheMode" value="REPLICATED"/>
+                <!-- Optional: number of backups -->
+                <property name="backups" value="3"/>
+            </bean>
+        </list>
+    </property>
 
   </bean>
 </beans>
