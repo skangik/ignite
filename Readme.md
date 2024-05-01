@@ -39,7 +39,7 @@ If you change `ignite-config.xml` you can apply new config **and restart the clu
 
 ### REST API quick access
 
-* To activate REST API port forwarding on `localhost:8080` run `make por-forward`
+* To activate REST API port forwarding on `localhost:8080` run `make port-forward`
 * Then you can register on `console.gridgain.com` for free, download their agent and to run it
   locally to have a UI view on your cluster
 * Also you can access your cluster's REST API on `localhost:8080`
